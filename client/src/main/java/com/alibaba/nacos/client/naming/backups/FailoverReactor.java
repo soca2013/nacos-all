@@ -35,6 +35,8 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * @author nkorange
+ *
+ * 失败重启恢复机制
  */
 public class FailoverReactor {
 

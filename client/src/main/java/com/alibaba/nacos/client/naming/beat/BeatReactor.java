@@ -54,6 +54,7 @@ public class BeatReactor {
         });
     }
 
+    // 添加心跳信息 并进行一次心跳 （registerInstance 会添加心跳）
     public void addBeatInfo(String serviceName, BeatInfo beatInfo) {
         NAMING_LOGGER.info("[BEAT] adding beat: {} to beat map.", beatInfo);
         dom2Beat.put(buildKey(serviceName, beatInfo.getIp(), beatInfo.getPort()), beatInfo);
@@ -76,6 +77,7 @@ public class BeatReactor {
             + ip + Constants.NAMING_INSTANCE_ID_SPLITTER + port;
     }
 
+
     class BeatTask implements Runnable {
 
         BeatInfo beatInfo;
@@ -90,7 +92,9 @@ public class BeatReactor {
                 return;
             }
             long result = serverProxy.sendBeat(beatInfo);
+            // 计算下次调度时间
             long nextTime = result > 0 ? result : beatInfo.getPeriod();
+            // 放入调度器，下次进行调度
             executorService.schedule(new BeatTask(beatInfo), nextTime, TimeUnit.MILLISECONDS);
         }
     }

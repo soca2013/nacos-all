@@ -30,6 +30,8 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * @author xuanyin
+ *
+ * 更新服务请求
  */
 public class PushReceiver implements Runnable {
 
@@ -78,6 +80,7 @@ public class PushReceiver implements Runnable {
                 PushPacket pushPacket = JSON.parseObject(json, PushPacket.class);
                 String ack;
                 if ("dom".equals(pushPacket.type) || "service".equals(pushPacket.type)) {
+                    // 更新服务
                     hostReactor.processServiceJSON(pushPacket.data);
 
                     // send ack to server
@@ -98,6 +101,7 @@ public class PushReceiver implements Runnable {
                         + "\", \"data\":" + "\"\"}";
                 }
 
+                // 发送 消息
                 udpSocket.send(new DatagramPacket(ack.getBytes(Charset.forName("UTF-8")),
                     ack.getBytes(Charset.forName("UTF-8")).length, packet.getSocketAddress()));
             } catch (Exception e) {

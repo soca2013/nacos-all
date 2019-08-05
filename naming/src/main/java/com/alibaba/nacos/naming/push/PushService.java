@@ -130,6 +130,8 @@ public class PushService implements ApplicationContextAware, ApplicationListener
         this.applicationContext = applicationContext;
     }
 
+
+    // 监听服务变更事件
     @Override
     public void onApplicationEvent(ServiceChangeEvent event) {
         Service service = event.getService();
@@ -141,6 +143,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
             public void run() {
                 try {
                     Loggers.PUSH.info(serviceName + " is changed, add it to push queue.");
+                    //获取所有的clients
                     ConcurrentMap<String, PushClient> clients = clientMap.get(UtilsAndCommons.assembleFullServiceName(namespaceId, serviceName));
                     if (MapUtils.isEmpty(clients)) {
                         return;
@@ -149,6 +152,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
                     Map<String, Object> cache = new HashMap<>(16);
                     long lastRefTime = System.nanoTime();
                     for (PushClient client : clients.values()) {
+                        // 根据上次记录的心跳时间，判断现有的实例在缓存的时效内（默认10s）是否有心跳发送过来
                         if (client.zombie()) {
                             Loggers.PUSH.debug("client is zombie: " + client.toString());
                             clients.remove(client.toString());
@@ -169,6 +173,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
                             Loggers.PUSH.debug("[PUSH-CACHE] cache hit: {}:{}", serviceName, client.getAddrStr());
                         }
 
+                        // 发送消息
                         if (compressData != null) {
                             ackEntry = prepareAckEntry(client, compressData, data, lastRefTime);
                         } else {
@@ -405,6 +410,7 @@ public class PushService implements ApplicationContextAware, ApplicationListener
             this.socketAddr = socketAddr;
         }
 
+        //根据上次记录的心跳时间，判断现有的实例在缓存的时效内（默认10s）是否有心跳发送过来
         public boolean zombie() {
             return System.currentTimeMillis() - lastRefTime > switchDomain.getPushCacheMillis(serviceName);
         }

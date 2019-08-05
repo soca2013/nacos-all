@@ -34,53 +34,63 @@ public class Instance {
 
     /**
      * unique id of this instance.
+     * 实例id
      */
     private String instanceId;
 
     /**
      * instance ip
+     * 实例ip
      */
     private String ip;
 
     /**
      * instance port
+     * 实例端口号
      */
     private int port;
 
     /**
      * instance weight
+     * 实例的权重
      */
     private double weight = 1.0D;
 
     /**
      * instance health status
+     * 实例的健康状态
      */
     private boolean healthy = true;
 
     /**
      * If instance is enabled to accept request
+     * 实例是否接受请求
      */
     private boolean enabled = true;
 
     /**
      * If instance is ephemeral
-     *
+     * 是否是临时的
      * @since 1.0.0
      */
     private boolean ephemeral = true;
 
     /**
      * cluster information of instance
+     * 群集名
      */
     private String clusterName;
 
     /**
      * Service information of instance
+     * 服务名称
      */
     private String serviceName;
 
     /**
      * user extended attributes
+     *
+     * 元数据信息
      */
     private Map<String, String> metadata = new HashMap<String, String>();
 

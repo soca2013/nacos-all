@@ -211,6 +211,13 @@ public class InstanceController {
         throw new NacosException(NacosException.NOT_FOUND, "no matched ip found!");
     }
 
+
+    /**
+     * 客户端心跳
+     * @param request
+     * @return
+     * @throws Exception
+     */
     @CanDistro
     @RequestMapping(value = "/beat", method = RequestMethod.PUT)
     public JSONObject beat(HttpServletRequest request) throws Exception {
@@ -242,6 +249,7 @@ public class InstanceController {
         Instance instance = serviceManager.getInstance(namespaceId, serviceName, clientBeat.getCluster(), clientBeat.getIp(),
             clientBeat.getPort());
 
+        // 如果找不到实例，则注册实例
         if (instance == null) {
             instance = new Instance();
             instance.setPort(clientBeat.getPort());

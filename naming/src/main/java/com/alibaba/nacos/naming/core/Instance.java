@@ -44,6 +44,9 @@ public class Instance extends com.alibaba.nacos.api.naming.pojo.Instance impleme
 
     private volatile boolean marked = false;
 
+    /**
+     * 租户 信息
+     */
     private String tenant;
 
     private String app;

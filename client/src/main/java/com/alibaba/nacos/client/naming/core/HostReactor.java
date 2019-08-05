@@ -33,6 +33,8 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * @author xuanyin
+ *
+ * 通过定时器来实时更新ServiceInfo
  */
 public class HostReactor {
 
@@ -97,6 +99,7 @@ public class HostReactor {
         return executor.schedule(task, DEFAULT_DELAY, TimeUnit.MILLISECONDS);
     }
 
+    // 获取数据，并刷新到磁盘中
     public ServiceInfo processServiceJSON(String json) {
         ServiceInfo serviceInfo = JSON.parseObject(json, ServiceInfo.class);
         ServiceInfo oldService = serviceInfoMap.get(serviceInfo.getKey());
@@ -175,6 +178,7 @@ public class HostReactor {
 
             if (newHosts.size() > 0 || remvHosts.size() > 0 || modHosts.size() > 0) {
                 eventDispatcher.serviceChanged(serviceInfo);
+                // 写入磁盘
                 DiskCache.write(serviceInfo, cacheDir);
             }
 
@@ -303,20 +307,24 @@ public class HostReactor {
         @Override
         public void run() {
             try {
+                // 获取内存中的 ServiceInfo
                 ServiceInfo serviceObj = serviceInfoMap.get(ServiceInfo.getKey(serviceName, clusters));
 
+                // 如果 serviceObj 为空，通过远程拉取，初始化
                 if (serviceObj == null) {
                     updateServiceNow(serviceName, clusters);
                     executor.schedule(this, DEFAULT_DELAY, TimeUnit.MILLISECONDS);
                     return;
                 }
 
+                // getLastRefTime 过期了，重新获取
                 if (serviceObj.getLastRefTime() <= lastRefTime) {
                     updateServiceNow(serviceName, clusters);
                     serviceObj = serviceInfoMap.get(ServiceInfo.getKey(serviceName, clusters));
                 } else {
                     // if serviceName already updated by push, we should not override it
                     // since the push data may be different from pull through force push
+                    // 强制刷新
                     refreshOnly(serviceName, clusters);
                 }
 

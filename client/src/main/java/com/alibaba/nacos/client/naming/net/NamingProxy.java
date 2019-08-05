@@ -47,27 +47,39 @@ import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * @author nkorange
+ *
+ * 注册发现代理服务器
+ *
  */
 public class NamingProxy {
 
+    // 默认端口号
     private static final int DEFAULT_SERVER_PORT = 8848;
 
     private int serverPort = DEFAULT_SERVER_PORT;
 
+    //命名空间
     private String namespaceId;
 
+    //
     private String endpoint;
 
+    // 域
     private String nacosDomain;
 
+    // nacos 服务列表
     private List<String> serverList;
 
+    // 从 endpoint 获取的服务列表
     private List<String> serversFromEndpoint = new ArrayList<String>();
 
+    // 上次刷新 服务列表 时间
     private long lastSrvRefTime = 0L;
 
+    // 更新时间间隔
     private long vipSrvRefInterMillis = TimeUnit.SECONDS.toMillis(30);
 
+    // 属性
     private Properties properties;
 
     public NamingProxy(String namespaceId, String endpoint, String serverList) {
@@ -84,6 +96,8 @@ public class NamingProxy {
         initRefreshSrvIfNeed();
     }
 
+
+    //定时任务 30s 刷新服务列表（如果没有设置服务列表而设置了endpoint，则每30s从endpoint获取服务列表）
     private void initRefreshSrvIfNeed() {
         if (StringUtils.isEmpty(endpoint)) {
             return;
@@ -109,6 +123,7 @@ public class NamingProxy {
         refreshSrvIfNeed();
     }
 
+    // 从endpoint中获取服务列表
     public List<String> getServerListFromEndpoint() {
 
         try {
@@ -140,16 +155,18 @@ public class NamingProxy {
 
     private void refreshSrvIfNeed() {
         try {
-
+             // 服务列表不为空，返回
             if (!CollectionUtils.isEmpty(serverList)) {
                 NAMING_LOGGER.debug("server list provided by user: " + serverList);
                 return;
             }
 
+            // 刷新时间没到
             if (System.currentTimeMillis() - lastSrvRefTime < vipSrvRefInterMillis) {
                 return;
             }
 
+            // 从Endpoint 获取服务列表
             List<String> list = getServerListFromEndpoint();
 
             if (CollectionUtils.isEmpty(list)) {
@@ -167,6 +184,13 @@ public class NamingProxy {
         }
     }
 
+    /**
+     * 注册服务实例
+     * @param serviceName
+     * @param groupName
+     * @param instance
+     * @throws NacosException
+     */
     public void registerService(String serviceName, String groupName, Instance instance) throws NacosException {
 
         NAMING_LOGGER.info("[REGISTER-SERVICE] {} registering service {} with instance: {}",
@@ -189,6 +213,7 @@ public class NamingProxy {
 
     }
 
+    // 删除服务实例
     public void deregisterService(String serviceName, Instance instance) throws NacosException {
 
         NAMING_LOGGER.info("[DEREGISTER-SERVICE] {} deregistering service {} with instance: {}",
@@ -205,6 +230,7 @@ public class NamingProxy {
         reqAPI(UtilAndComs.NACOS_URL_INSTANCE, params, HttpMethod.DELETE);
     }
 
+    // 更新服务实例
     public void updateInstance(String serviceName, String groupName, Instance instance) throws NacosException {
         NAMING_LOGGER.info("[UPDATE-SERVICE] {} update service {} with instance: {}",
             namespaceId, serviceName, instance);
@@ -224,6 +250,7 @@ public class NamingProxy {
         reqAPI(UtilAndComs.NACOS_URL_INSTANCE, params, HttpMethod.PUT);
     }
 
+    // 查询服务实例
     public Service queryService(String serviceName, String groupName) throws NacosException {
         NAMING_LOGGER.info("[QUERY-SERVICE] {} query service : {}, {}",
             namespaceId, serviceName, groupName);
@@ -238,6 +265,7 @@ public class NamingProxy {
         return jsonObject.toJavaObject(Service.class);
     }
 
+    // 创建服务
     public void createService(Service service, AbstractSelector selector) throws NacosException {
 
         NAMING_LOGGER.info("[CREATE-SERVICE] {} creating service : {}",
@@ -255,6 +283,7 @@ public class NamingProxy {
 
     }
 
+    // 删除服务
     public boolean deleteService(String serviceName, String groupName) throws NacosException {
         NAMING_LOGGER.info("[DELETE-SERVICE] {} deleting service : {} with groupName : {}",
             namespaceId, serviceName, groupName);
@@ -268,6 +297,8 @@ public class NamingProxy {
         return "ok".equals(result);
     }
 
+
+    //更新服务
     public void updateService(Service service, AbstractSelector selector) throws NacosException {
         NAMING_LOGGER.info("[UPDATE-SERVICE] {} updating service : {}",
             namespaceId, service);
@@ -283,6 +314,8 @@ public class NamingProxy {
         reqAPI(UtilAndComs.NACOS_URL_SERVICE, params, HttpMethod.PUT);
     }
 
+
+    // 查询服务
     public String queryList(String serviceName, String clusters, int udpPort, boolean healthyOnly)
         throws NacosException {
 
